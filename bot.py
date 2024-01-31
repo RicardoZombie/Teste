@@ -4,59 +4,47 @@ CHAVE_API = "botapi"
 
 bot = telebot.TeleBot(CHAVE_API)
 
-# Dados dos usuários (apenas para brincadeira, não use isso para dados reais!)
-saldo_usuarios = {}
+@bot.message_handler(commands=["iniciar"])
+def iniciar(mensagem):
+    bot.send_message(mensagem.chat.id, "🚀 **Bem-vindo ao Bot de Precificação da Amazon!**\nPara começar, use /calcular_preco")
 
-@bot.message_handler(commands=["saldo"])
-def saldo(mensagem):
-    user_id = mensagem.from_user.id
-    if user_id in saldo_usuarios:
-        bot.send_message(mensagem.chat.id, f"Seu saldo atual é: {saldo_usuarios[user_id]} reais")
-    else:
-        bot.send_message(mensagem.chat.id, "Você ainda não possui uma conta. Use /criar_conta para criar uma.")
+@bot.message_handler(commands=["calcular_preco"])
+def calcular_preco(mensagem):
+    bot.send_message(mensagem.chat.id, "📦 **Calculando Preço de Venda:**\n\nEnvie o valor que você paga no site do fornecedor:")
+    bot.register_next_step_handler(mensagem, obter_custo_fornecedor)
 
-@bot.message_handler(commands=["criar_conta"])
-def criar_conta(mensagem):
-    user_id = mensagem.from_user.id
-    if user_id not in saldo_usuarios:
-        saldo_usuarios[user_id] = 0
-        bot.send_message(mensagem.chat.id, "Conta criada com sucesso!")
-    else:
-        bot.send_message(mensagem.chat.id, "Você já possui uma conta.")
-
-@bot.message_handler(commands=["depositar"])
-def depositar(mensagem):
+def obter_custo_fornecedor(mensagem):
     try:
-        valor = float(mensagem.text.split()[1])
-        user_id = mensagem.from_user.id
+        custo_fornecedor = float(mensagem.text)
+        tarifa_amazon = 5.50
 
-        if user_id in saldo_usuarios:
-            saldo_usuarios[user_id] += valor
-            bot.send_message(mensagem.chat.id, f"Depósito de {valor} reais realizado com sucesso. Seu saldo atual é: {saldo_usuarios[user_id]} reais")
-        else:
-            bot.send_message(mensagem.chat.id, "Você ainda não possui uma conta. Use /criar_conta para criar uma.")
-    except (IndexError, ValueError):
-        bot.send_message(mensagem.chat.id, "Formato incorreto. Use /depositar [valor] para realizar um depósito.")
+        preco_venda = custo_fornecedor
+        comissao_amazon = 0
+        lucro_venda = 0
 
-@bot.message_handler(commands=["sacar"])
-def sacar(mensagem):
-    try:
-        valor = float(mensagem.text.split()[1])
-        user_id = mensagem.from_user.id
+        roi_desejado = float(input("Qual é o ROI desejado (%)? "))
+        
+        calculo_roi = 0.00
+        while calculo_roi < roi_desejado:
+            preco_venda += 0.01
+            comissao_amazon = preco_venda * 0.12
+            lucro_venda = preco_venda - custo_fornecedor - comissao_amazon
+            calculo_roi = lucro_venda / preco_venda * 100
 
-        if user_id in saldo_usuarios:
-            if saldo_usuarios[user_id] >= valor:
-                saldo_usuarios[user_id] -= valor
-                bot.send_message(mensagem.chat.id, f"Saque de {valor} reais realizado com sucesso. Seu saldo atual é: {saldo_usuarios[user_id]} reais")
-            else:
-                bot.send_message(mensagem.chat.id, "Saldo insuficiente para realizar o saque.")
-        else:
-            bot.send_message(mensagem.chat.id, "Você ainda não possui uma conta. Use /criar_conta para criar uma.")
-    except (IndexError, ValueError):
-        bot.send_message(mensagem.chat.id, "Formato incorreto. Use /sacar [valor] para realizar um saque.")
+        resposta = f"""
+        🚀 **Resultado do Cálculo:**
+        Valor sugerido: R${preco_venda:.2f}
+        Comissão da Amazon: R${comissao_amazon:.2f}
+        Lucro por venda: R${lucro_venda:.2f}
+        ROI Recomendado: {calculo_roi:.2f}%
+        Custo total: R${custo_fornecedor + tarifa_amazon:.2f}
 
-@bot.message_handler(func=lambda mensagem: True)
-def comando_desconhecido(mensagem):
-    bot.send_message(mensagem.chat.id, "Comando desconhecido. Use /ajuda para ver os comandos disponíveis.")
+        /iniciar para começar novamente
+        """
+        bot.send_message(mensagem.chat.id, resposta)
+
+    except ValueError:
+        bot.send_message(mensagem.chat.id, "Formato incorreto. Por favor, insira um valor numérico.")
+        bot.register_next_step_handler(mensagem, obter_custo_fornecedor)
 
 bot.polling()
