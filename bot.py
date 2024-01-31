@@ -2,11 +2,11 @@ import telebot
 
 CHAVE_API = "botapi"
 
-bot = telebot.TeleBot(CHAVE_API)
+bot = telebot.TeleBot(5564553228:AAFZlf_ubLFKHFgWTejgAj23JKaxAW-3Rc0)
 
-@bot.message_handler(commands=["iniciar"])
+@bot.message_handler(commands=["start"])
 def iniciar(mensagem):
-    bot.send_message(mensagem.chat.id, "🚀 **Bem-vindo ao Bot de Precificação da Amazon!**\nPara começar, use /calcular_preco")
+    bot.send_message(mensagem.chat.id, "🚀 **Bem-vindo ao Bot de Precificação da Amazon!**\nEste bot foi desenvolvido por Ricardo Barbosa.\n\nPara começar, use /calcular_preco")
 
 @bot.message_handler(commands=["calcular_preco"])
 def calcular_preco(mensagem):
@@ -22,8 +22,17 @@ def obter_custo_fornecedor(mensagem):
         comissao_amazon = 0
         lucro_venda = 0
 
-        roi_desejado = float(input("Qual é o ROI desejado (%)? "))
-        
+        bot.send_message(mensagem.chat.id, "🚀 **Informe o ROI desejado (%):**")
+        bot.register_next_step_handler(mensagem, lambda msg: obter_roi(msg, custo_fornecedor, tarifa_amazon, preco_venda, comissao_amazon, lucro_venda))
+
+    except ValueError:
+        bot.send_message(mensagem.chat.id, "Formato incorreto. Por favor, insira um valor numérico.")
+        bot.register_next_step_handler(mensagem, obter_custo_fornecedor)
+
+def obter_roi(mensagem, custo_fornecedor, tarifa_amazon, preco_venda, comissao_amazon, lucro_venda):
+    try:
+        roi_desejado = float(mensagem.text)
+
         calculo_roi = 0.00
         while calculo_roi < roi_desejado:
             preco_venda += 0.01
@@ -39,12 +48,12 @@ def obter_custo_fornecedor(mensagem):
         ROI Recomendado: {calculo_roi:.2f}%
         Custo total: R${custo_fornecedor + tarifa_amazon:.2f}
 
-        /iniciar para começar novamente
+        /start para começar novamente
         """
         bot.send_message(mensagem.chat.id, resposta)
 
     except ValueError:
         bot.send_message(mensagem.chat.id, "Formato incorreto. Por favor, insira um valor numérico.")
-        bot.register_next_step_handler(mensagem, obter_custo_fornecedor)
+        bot.register_next_step_handler(mensagem, lambda msg: obter_roi(msg, custo_fornecedor, tarifa_amazon, preco_venda, comissao_amazon, lucro_venda))
 
 bot.polling()
