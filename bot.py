@@ -1,8 +1,8 @@
 import telebot
 
-CHAVE_API = "botapi"
+CHAVE_API = "5564553228:AAFZlf_ubLFKHFgWTejgAj23JKaxAW-3Rc0"
 
-bot = telebot.TeleBot(5564553228:AAFZlf_ubLFKHFgWTejgAj23JKaxAW-3Rc0)
+bot = telebot.TeleBot(CHAVE_API)
 
 @bot.message_handler(commands=["start"])
 def iniciar(mensagem):
