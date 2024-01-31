@@ -1,7 +1,9 @@
 import telebot
 
-CHAVE_API = "api_aqui"
+# Chave API do bot
+CHAVE_API = "5564553228:AAFZlf_ubLFKHFgWTejgAj23JKaxAW-3Rc0"
 
+# Inicializar o bot do Telegram
 bot = telebot.TeleBot(CHAVE_API)
 
 @bot.message_handler(commands=["start"])
@@ -15,7 +17,8 @@ def calcular_preco(mensagem):
 
 def obter_custo_fornecedor(mensagem):
     try:
-        custo_fornecedor = float(mensagem.text)
+        # Substituído ',' por '.' e convertido para float
+        custo_fornecedor = float(mensagem.text.replace(',', '.'))
         tarifa_amazon = 5.50
 
         preco_venda = custo_fornecedor
@@ -31,12 +34,13 @@ def obter_custo_fornecedor(mensagem):
 
 def obter_roi(mensagem, custo_fornecedor, tarifa_amazon, preco_venda, comissao_amazon, lucro_venda):
     try:
-        roi_desejado = float(mensagem.text)
+        roi_desejado = float(mensagem.text.replace(',', '.'))
 
         calculo_roi = 0.00
         while calculo_roi < roi_desejado:
             preco_venda += 0.01
             comissao_amazon = preco_venda * 0.12
+
             lucro_venda = preco_venda - custo_fornecedor - comissao_amazon
             calculo_roi = lucro_venda / preco_venda * 100
 
@@ -55,5 +59,9 @@ def obter_roi(mensagem, custo_fornecedor, tarifa_amazon, preco_venda, comissao_a
     except ValueError:
         bot.send_message(mensagem.chat.id, "Formato incorreto. Por favor, insira um valor numérico.")
         bot.register_next_step_handler(mensagem, lambda msg: obter_roi(msg, custo_fornecedor, tarifa_amazon, preco_venda, comissao_amazon, lucro_venda))
+
+@bot.message_handler(func=lambda message: True)
+def responder_pergunta(message):
+    bot.send_message(message.chat.id, "Comando desconhecido. Use /start ou /calcular_preco para interagir com o bot.")
 
 bot.polling()
