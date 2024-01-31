@@ -7,7 +7,7 @@ CHAVE_API = "5564553228:AAFZlf_ubLFKHFgWTejgAj23JKaxAW-3Rc0"
 bot = telebot.TeleBot(CHAVE_API)
 
 # Função para calcular a tarifa com base no peso e região
-def calcular_tarifa(peso, regiao):
+def calcular_tarifa(peso):
     # Tabela de tarifas para outras regiões
     tarifas_outras_regioes = {"0-249g": 17.45, "250g-500g": 18.45, "500g-1kg": 19.45, "1kg-2kg": 19.95,
                               "2kg-3kg": 23.45, "3kg-4kg": 24.95, "4kg-5kg": 27.95, "5kg-6kg": 33.95,
@@ -15,12 +15,15 @@ def calcular_tarifa(peso, regiao):
                               "kg-adicional": 3.50}
 
     # Obter a faixa de peso correspondente
-    faixa_peso = next(key for key in tarifas_outras_regioes if key.startswith(str(peso)))
+    faixa_peso = next((key for key in tarifas_outras_regioes if key.startswith(str(peso))), None)
 
-    # Calcular a tarifa com base no peso
-    tarifa = tarifas_outras_regioes[faixa_peso]
-
-    return tarifa
+    if faixa_peso is not None:
+        # Calcular a tarifa com base no peso
+        tarifa = tarifas_outras_regioes[faixa_peso]
+        return tarifa
+    else:
+        # Caso o peso não esteja em nenhuma faixa conhecida
+        return 0.0
 
 @bot.message_handler(commands=["start"])
 def iniciar(mensagem):
